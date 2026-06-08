@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Equipos - Actividad Física Interactiva</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- ============ MODAL DE CONFIRMACIÓN DE INVITACIÓN ============ -->
+    <dialog id="modalConfirmacion" class="modal-confirmacion">
+        <div class="modal-contenido">
+            <div class="modal-icono">🤝</div>
+            <h3 class="modal-titulo">Invitar compañero</h3>
+            <p class="modal-texto">¿Deseas invitar a <strong id="modalNombreInvitado"></strong> a tu equipo?</p>
+            <p class="modal-subtexto" id="modalSubtexto"></p>
+            <div class="modal-botones">
+                <button class="btn-modal-cancelar" id="btnCancelarInvitacion">Cancelar</button>
+                <button class="btn-modal-confirmar" id="btnConfirmarInvitacion">✅ Confirmar</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- ============ PANTALLA DE LOGIN ============ -->
+    <div id="pantallaLogin" class="pantalla-login">
+        <div class="contenedor-login">
+            <div class="login-logo">⚡</div>
+            <h1>SISTEMA DE EQUIPOS</h1>
+            <p class="login-subtitle">Trabajo en Equipo • Competencia • Logros</p>
+            
+            <div class="botones-login">
+                <button class="btn-login btn-alumno" onclick="mostrarLoginAlumno()">
+                    👨‍🎓 Soy Alumno
+                </button>
+                <button class="btn-login btn-profesor" onclick="mostrarLoginProfesor()">
+                    👨‍🏫 Soy Profesor
+                </button>
+            </div>
+
+            <!-- Login Alumno -->
+            <div id="loginAlumno" class="login-box hidden">
+                <p class="login-hint">Escribe tu nombre tal como aparece en la lista</p>
+                <input type="text" id="inputNombreAlumno" placeholder="Tu nombre completo" onkeypress="if(event.key==='Enter') loginAlumnoFunc()">
+                <button class="btn-confirmar" onclick="loginAlumnoFunc()">Continuar →</button>
+                <button class="btn-volver" onclick="volverLogin()">← Volver</button>
+            </div>
+
+            <!-- Login Profesor -->
+            <div id="loginProfesor" class="login-box hidden">
+                <p class="login-hint">Ingresa la contraseña de profesor</p>
+                <input type="password" id="inputPasswordProfesor" placeholder="Contraseña" onkeypress="if(event.key==='Enter') loginProfesorFunc()">
+                <button class="btn-confirmar" onclick="loginProfesorFunc()">Verificar →</button>
+                <button class="btn-volver" onclick="volverLogin()">← Volver</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ PANEL ALUMNO ============ -->
+    <div id="panelAlumno" class="panel hidden">
+        <header class="header">
+            <h1 id="nombreAlumnoHeader" title="Haz clic 5 veces para el modo secreto">Cargando...</h1>
+            <div class="info-header">
+                <span class="rol-badge" id="rolBadge"></span>
+                <span class="puntos-header" id="puntosHeader">Pts: 0</span>
+            </div>
+            <button class="btn-salir" onclick="logout()" title="Cerrar sesión">🚪</button>
+        </header>
+
+        <nav class="nav-tabs" id="navAlumno">
+            <button class="tab-btn active" onclick="cambiarTab('fichas', this)">👥 Fichas</button>
+            <button class="tab-btn" onclick="cambiarTab('miEquipo', this)">🎯 Mi Equipo</button>
+            <button class="tab-btn" onclick="cambiarTab('ruleta', this)">🎡 Actividad</button>
+            <button class="tab-btn" onclick="cambiarTab('ranking', this)">🏆 Ranking</button>
+            <button class="tab-btn" onclick="cambiarTab('logros', this)">⭐ Logros</button>
+        </nav>
+
+        <!-- TAB: FICHAS -->
+        <div id="tabFichas" class="tab-content active">
+            <div class="seccion">
+                <h2>Selecciona compañeros para tu equipo</h2>
+                <div class="cupo-info" id="cupoInfo"></div>
+                <input type="text" id="buscarCompanero" placeholder="🔍 Buscar compañero..." oninput="filtrarCompaneros()">
+                <div id="gridFichas" class="grid-fichas"></div>
+            </div>
+        </div>
+
+        <!-- TAB: MI EQUIPO -->
+        <div id="tabMiEquipo" class="tab-content hidden">
+            <div class="seccion">
+                <h2>Mi Equipo</h2>
+                <div id="miEquipoContent" class="equipo-container-wrap"></div>
+            </div>
+        </div>
+
+        <!-- TAB: RULETA -->
+        <div id="tabRuleta" class="tab-content hidden">
+            <div class="seccion">
+                <h2>Actividad del Momento</h2>
+                <div class="ruleta-box">
+                    <div class="ruleta-wrap">
+                        <div class="ruleta-puntero">▼</div>
+                        <div class="ruleta" id="ruletaDisc"></div>
+                    </div>
+                    <button class="btn-girar" onclick="girarRuleta()" id="btnGirar">🎡 Girar Ruleta</button>
+                </div>
+                <div id="actividadActual" class="actividad-resultado hidden">
+                    <h3 id="actividadNombre"></h3>
+                    <p id="actividadDescripcion"></p>
+                    <div class="botones-actividad">
+                        <button class="btn-aceptar" onclick="aceptarActividad()">✅ Aceptar (+3 pts)</button>
+                        <button class="btn-rechazar" onclick="rechazarActividad()">❌ Rechazar</button>
+                    </div>
+                </div>
+                <div id="adversidadActual" class="adversidad-resultado hidden">
+                    <h3>⚠️ RETO ESPECIAL</h3>
+                    <p id="adversidadTexto"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: RANKING -->
+        <div id="tabRanking" class="tab-content hidden">
+            <div class="seccion">
+                <h2>🏆 Tabla de Posiciones</h2>
+                <div id="tablaRanking" class="tabla-ranking-wrap"></div>
+            </div>
+        </div>
+
+        <!-- TAB: LOGROS -->
+        <div id="tabLogros" class="tab-content hidden">
+            <div class="seccion">
+                <h2>⭐ Logros Desbloqueados</h2>
+                <div id="logrosGrid" class="logros-grid"></div>
+            </div>
+        </div>
+
+        <!-- MÓDULO SECRETO: PASOS (bug fix: botón de cierre) -->
+        <div id="moduloPasos" class="modulo-secreto-trigger hidden" onclick="toggleCajaSecreta()">👣</div>
+        <div id="cajaSecretaPanel" class="caja-secreta hidden">
+            <button class="btn-cerrar-secreto" onclick="cerrarModuloSecreto()" title="Cerrar">✕</button>
+            <h3>👣 Mis Pasos Hoy</h3>
+            <p class="secreto-total-label">Acumulado: <strong id="totalPasos">0</strong> pasos</p>
+            <input type="number" id="inputPasos" placeholder="Pasos ahora..." min="0">
+            <button class="btn-registrar" onclick="registrarPasos()">Registrar Pasos</button>
+        </div>
+    </div>
+
+    <!-- ============ PANEL PROFESOR ============ -->
+    <div id="panelProfesor" class="panel hidden">
+        <header class="header header-prof">
+            <h1>🎓 Panel Profesor</h1>
+            <button class="btn-salir" onclick="logout()" title="Cerrar sesión">🚪</button>
+        </header>
+
+        <nav class="nav-tabs" id="navProfesor">
+            <button class="tab-btn active" onclick="cambiarTabProf('cargar', this)">📂 Cargar</button>
+            <button class="tab-btn" onclick="cambiarTabProf('equipos', this)">👥 Equipos</button>
+            <button class="tab-btn" onclick="cambiarTabProf('actividades', this)">🎮 Actividades</button>
+            <button class="tab-btn" onclick="cambiarTabProf('puntuacion', this)">🎯 Puntuación</button>
+            <button class="tab-btn" onclick="cambiarTabProf('resumen', this)">📈 Resumen</button>
+        </nav>
+
+        <!-- TAB: CARGAR -->
+        <div id="tabCargar" class="tab-content active">
+            <div class="seccion">
+                <h2>Cargar Datos desde CSV</h2>
+                <p class="seccion-hint">Los archivos se procesan directamente en el navegador (compatible con GitHub Pages).</p>
+                
+                <div class="form-grupo">
+                    <label>👨‍🎓 Estudiantes <span class="label-hint">(CSV: Nombre,Rol)</span></label>
+                    <div class="file-drop-zone" id="dropEstudiantes">
+                        <input type="file" id="csvEstudiantes" accept=".csv" onchange="procesarCSVDirecto('estudiantes', this)">
+                        <span>Arrastra un CSV o haz clic aquí</span>
+                    </div>
+                    <div id="statusEstudiantes" class="status-carga"></div>
+                </div>
+
+                <div class="form-grupo">
+                    <label>🎮 Actividades <span class="label-hint">(CSV: Nombre,Descripción)</span></label>
+                    <div class="file-drop-zone" id="dropActividades">
+                        <input type="file" id="csvActividades" accept=".csv" onchange="procesarCSVDirecto('actividades', this)">
+                        <span>Arrastra un CSV o haz clic aquí</span>
+                    </div>
+                    <div id="statusActividades" class="status-carga"></div>
+                </div>
+
+                <div class="form-grupo">
+                    <label>⚠️ Adversidades <span class="label-hint">(CSV: una adversidad por línea)</span></label>
+                    <div class="file-drop-zone" id="dropAdversidades">
+                        <input type="file" id="csvAdversidades" accept=".csv" onchange="procesarCSVDirecto('adversidades', this)">
+                        <span>Arrastra un CSV o haz clic aquí</span>
+                    </div>
+                    <div id="statusAdversidades" class="status-carga"></div>
+                </div>
+            </div>
+
+            <!-- Resumen de datos cargados -->
+            <div class="seccion" id="resumenCargados">
+                <h2>📊 Estado Actual del Sistema</h2>
+                <div id="estadoSistema" class="estado-sistema-grid"></div>
+                <div id="listaEstudiantesProf" class="lista-estudiantes-prof"></div>
+            </div>
+        </div>
+
+        <!-- TAB: EQUIPOS (módulo completo) -->
+        <div id="tabEquipos" class="tab-content hidden">
+            <div class="seccion">
+                <h2>👥 Equipos Formados</h2>
+                <div id="equiposProfesor" class="equipos-dashboard"></div>
+            </div>
+            <div class="seccion">
+                <h2>🚶 Alumnos sin Equipo</h2>
+                <p class="seccion-hint">Estudiantes que aún no pertenecen a ningún equipo.</p>
+                <div id="alumnosSinEquipo" class="alumnos-rezagados"></div>
+            </div>
+        </div>
+
+        <!-- TAB: ACTIVIDADES -->
+        <div id="tabActividades" class="tab-content hidden">
+            <div class="seccion">
+                <h2>🎮 Actividades Cargadas</h2>
+                <div id="actividadesProfesor" class="actividades-list"></div>
+            </div>
+        </div>
+
+        <!-- TAB: PUNTUACIÓN -->
+        <div id="tabPuntuacion" class="tab-content hidden">
+            <div class="seccion">
+                <h2>🎯 Registrar Puntuación</h2>
+                
+                <div class="form-grupo">
+                    <label>Equipo</label>
+                    <select id="selectEquipo" class="input-profesor"></select>
+                </div>
+
+                <div class="puntos-row">
+                    <div class="form-grupo">
+                        <label>Puntos personales</label>
+                        <input type="number" id="inputPuntosPersonal" class="input-profesor" min="0" max="100" placeholder="0">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Puntos de equipo</label>
+                        <input type="number" id="inputPuntosEquipo" class="input-profesor" min="0" max="100" placeholder="0">
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="registrarPuntuacionProf()">✅ Registrar Puntuación</button>
+                <div id="historialPuntuacion" class="historial"></div>
+            </div>
+        </div>
+
+        <!-- TAB: RESUMEN -->
+        <div id="tabResumen" class="tab-content hidden">
+            <div class="seccion">
+                <h2>📈 Resumen General</h2>
+                <div id="resumenGeneral" class="resumen"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
